@@ -1,0 +1,62 @@
+server:
+    port: 18000
+
+spring:
+    devtools:
+        restart:
+            enabled: true
+    datasource:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://127.0.0.1:3306/pet?characterEncoding=utf8&useUnicode=true&allowMultiQueries=true&serverTimezone=GMT%2B8&useSSL=false&allowPublicKeyRetrieval=true
+        username: root
+        password: asd5323651
+
+
+
+mybatis:
+    mapper-locations: classpath:mapper/*.xml
+    type-aliases-package: com.everlasting.demo.entity.po
+    configuration:
+        map-underscore-to-camel-case: true
+        log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+    level:
+        com.netflix: OFF
+        com.nxb.wecrush.feign: DEBUG
+        org.springframework: DEBUG
+        org.springframework.web: DEBUG
+        com.everlasting.demo.core.knowledgeBase: DEBUG
+        com.everlasting.demo.config: DEBUG
+    file:
+        path: ./logs # 配置日志打印目录,默认名称为:spring.log
+        name: ./logs/SpringLogging.log # 配置日志打印目录和名称,和上面的path选一即可
+
+feign:
+    client:
+        config:
+            default:
+                loggerLevel: full
+
+config:
+    feedbackEmail: tech-support@cheeselove.cn
+    captcha:
+        properValue: abcdefghijkmnopqrstuvwxyABCDEFGHJKLMNPQRSTUVWXY3456789
+    pageSize: 10
+    imageBlurRadius: 5
+    imageBlurSD: 3
+
+
+
+# 放到配置中心中
+jwt:
+    secret: s23wh5su-7ste-1c7u-7bug-8vcbidt9z837
+    expire: 2592000 #30天,待修改,单位秒
+
+verify:
+    sms:
+        templateCode: SMS_154950909
+
+
+
+

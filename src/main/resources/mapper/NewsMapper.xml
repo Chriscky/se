@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.dao.NewsMapper">
+
+	<resultMap id="newsMap" type="com.example.demo.entity.PO.NewsPO">
+		<id column="id" property="id" javaType="int"/>
+		<result column="title" property="title" javaType="string"/>
+		<result column="detail_url" property="detailUrl" javaType="string"/>
+		<result column="time" property="time" javaType="long"/>
+		<result column="content" property="content" javaType="string"/>
+		<result column="source" property="source" javaType="string"/>
+		<result column="type" property="type" javaType="string"/>
+		<result column="intro" property="intro" javaType="string"/>
+		<result column="createdAt" property="createdAt" javaType="long"/>
+		<result column="updatedAt" property="updatedAt" javaType="long"/>
+	</resultMap>
+
+	<insert id="saveNews" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+		insert into news(title, detail_url, time, content, source, type, intro, created_at, updated_at)
+		values (IFNULL(#{title}, ''), IFNULL(#{detailUrl}, ''), IFNULL(#{time}, 0), IFNULL(#{content}, ''), IFNULL(#{source}, ''), IFNULL(#{type}, ''), IFNULL(#{intro}, ''), IFNULL(#{createdAt}, 0), IFNULL(#{updatedAt}, 0))
+	</insert>
+
+
+<!--	一个事务，但是可能会因为单条sql语句过长出现问题-->
+	<insert id="batchSaveNews"  useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+		insert into news(title, detail_url, time, content, source, type, intro, created_at, updated_at)
+		values
+		<foreach collection="newsList" item="news" index="index" separator=",">
+			(IFNULL(#{news.title}, ''), #{news.detailUrl}, IFNULL(#{news.time}, 0), IFNULL(#{news.content}, ''), IFNULL(#{news.source}, ''), IFNULL(#{news.type}, ''), IFNULL(#{news.intro}, ''), IFNULL(#{news.createdAt}, 0), IFNULL(#{news.updatedAt}, 0)
+		    </foreach>
+	</insert>
+
+
+<!--	会为每条语句生成一个事务，但是避免了单条sql语句过长可能产生的问题-->
+	<insert id="batchSaveNewsMultiWork"  useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+		<foreach collection="newsList" item="news" index="index" separator=";">
+			insert into news(title, detail_url, time, content, source, type, intro, created_at, updated_at)
+			values
+			    (IFNULL(#{news.title}, ''), #{news.detailUrl}, IFNULL(#{news.time}, 0), IFNULL(#{news.content}, ''), IFNULL(#{news.source}, ''), IFNULL(#{news.type}, ''), IFNULL(#{news.intro}, ''), IFNULL(#{news.createdAt}, 0), IFNULL(#{news.updatedAt}, 0)
+		</foreach>
+	</insert>
+
+	<select id="getOnePageNews" resultMap="newsMap">
+		select id, title, detail_url, time, content, source, type, intro, created_at, updated_at
+		from news
+		where `enable` = 1
+		<if test="type != null">
+			and `type` = #{type}
+		</if>
+		<if test="sources != null">
+			and `source` in
+			<foreach collection="sources" item="item" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		<if test="startTime != null">
+			and `time` &gt;= #{startTime}
+		</if>
+		<if test="endTime != null">
+			and `time` &lt;= #{endTime}
+		</if>
+		order by created_at desc
+		limit #{offset}, #{limit}
+	</select>
+	
+	<select id="findNewsByTitle" resultMap="newsMap">
+		select id, title, detail_url, time, content, source, type, intro, created_at, updated_at
+		from news
+		where `title` LIKE CONCAT('%', #{title}, '%')
+	</select>
+	
+	<select id="findNewsBySource" resultMap="newsMap">
+		select id, title, detail_url, time, content, source, type, intro, created_at, updated_at
+		from news
+# 		参数为list, 用于in查询
+		<if test="sources != null">
+			where `source` in
+			<foreach collection="sources" item="item" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+
+
+	<select id="findNewsByTimeRange" resultMap="newsMap">
+		select id, title, detail_url, time, content, source, type, intro, created_at, updated_at
+		from news
+		where `time` &gt;= #{startTime} and `time` &lt;= #{endTime}
+	</select>
+
+	<select id="findNewsByType" resultMap="newsMap">
+		select id, title, detail_url, time, content, source, type, intro, created_at, updated_at
+		from news
+		where `type` = #{type}
+	</select>
+
+	<select id="findNewsById" resultMap="newsMap" >
+		select id, title, detail_url, time, content, source, type, intro, created_at, updated_at
+		from news
+		where `id` = #{id}
+	</select>
+
+	<update id="updateNews">
+		update news
+		set
+		    `title` = IFNULL(#{title}, `title`),
+		    `detail_url` = IFNULL(#{detailUrl}, `detail_url`),
+		    `time` = IFNULL(#{time}, `time`),
+		    `content` = IFNULL(#{content}, `content`),
+		    `source` = IFNULL(#{source}, `source`),
+		    `type` = IFNULL(#{type}, `type`),
+		    `intro` = IFNULL(#{intro}, `intro`),
+ 		    `updated_at` = IFNULL(#{updatedAt}, `updated_at`)
+		where id = #{id}
+	</update>
+	
+	<update id="disableNews">
+		update news
+		set
+		    `enable` = 0,
+ 		    `updated_at` = IFNULL(#{updatedAt}, `updated_at`)
+		where id = #{id}
+	</update>
+
+	<select id="findAllNews" resultMap="newsMap">
+		select id, title, detail_url, time, content, source, type, intro, created_at, updated_at
+		from news
+		where `enable` = 1
+	</select>
+
+
+
+</mapper>
